@@ -1,0 +1,232 @@
+﻿@page "/register"
+@inject AuthService AuthService
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-logo">CodeSign</div>
+        <div class="login-subtitle">Utwórz nowe konto</div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-box">@errorMessage</div>
+        }
+
+        @if (success)
+        {
+            <div class="success-box">
+                Konto zostało utworzone! <a href="/login">Zaloguj się →</a>
+            </div>
+        }
+        else
+        {
+            <div class="field">
+                <label>Imię i nazwisko</label>
+                <input type="text" @bind="fullName" placeholder="Roman Yavorenko" />
+            </div>
+
+            <div class="field">
+                <label>Stanowisko</label>
+                <input type="text" @bind="jobTitle" placeholder="Junior ASP.NET Developer" />
+            </div>
+
+            <div class="field">
+                <label>Email</label>
+                <input type="email" @bind="email" placeholder="roman@codesign.com" />
+            </div>
+
+            <div class="field">
+                <label>Hasło <span class="hint">(min. 6 znaków, 1 cyfra)</span></label>
+                <input type="password" @bind="password" placeholder="••••••••" />
+            </div>
+
+            <button class="btn-login" @onclick="HandleRegister" disabled="@isLoading">
+                @(isLoading ? "Rejestrowanie..." : "Zarejestruj się")
+            </button>
+
+            <div class="login-link">
+                Masz już konto? <a href="/login">Zaloguj się</a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f1117;
+    }
+
+    .login-card {
+        background: #1a1d27;
+        border: 1px solid #2a2e3d;
+        border-radius: 16px;
+        padding: 48px 40px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .login-logo {
+        font-size: 28px;
+        font-weight: 700;
+        color: #3aafa9;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+    }
+
+    .login-subtitle {
+        font-size: 13px;
+        color: #6b7188;
+        margin-bottom: 32px;
+    }
+
+    .field {
+        margin-bottom: 16px;
+    }
+
+    .field label {
+        display: block;
+        font-size: 12px;
+        color: #9298ad;
+        margin-bottom: 6px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .hint {
+        font-size: 11px;
+        color: #6b7188;
+        text-transform: none;
+        font-weight: 400;
+    }
+
+    .field input {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0f1117;
+        border: 1px solid #2a2e3d;
+        border-radius: 8px;
+        color: #e4e6ec;
+        font-size: 14px;
+        outline: none;
+        transition: border-color .15s;
+        box-sizing: border-box;
+    }
+
+    .field input:focus { border-color: #3aafa9; }
+
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: #3aafa9;
+        color: #0f1117;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background .15s;
+    }
+
+    .btn-login:hover:not(:disabled) { background: #2d9690; }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+
+    .error-box {
+        background: rgba(240,100,100,.1);
+        border: 1px solid rgba(240,100,100,.3);
+        color: #f06464;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+
+    .success-box {
+        background: rgba(58,175,169,.1);
+        border: 1px solid rgba(58,175,169,.3);
+        color: #3aafa9;
+        padding: 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .success-box a { color: #3aafa9; font-weight: 600; }
+
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #6b7188;
+    }
+
+    .login-link a { color: #3aafa9; }
+</style>
+
+@code {
+    private string fullName = string.Empty;
+    private string jobTitle = string.Empty;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+    private bool success = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+            Nav.NavigateTo("/dashboard");
+    }
+
+    private async Task HandleRegister()
+    {
+        if (string.IsNullOrWhiteSpace(fullName) ||
+            string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Wypełnij wszystkie wymagane pola.";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var payload = new
+            {
+                email,
+                password,
+                fullName,
+                jobTitle
+            };
+
+            var response = await Http.PostAsJsonAsync("api/Auth/register", payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                success = true;
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = error.Contains("już istnieje")
+                    ? "Użytkownik z tym adresem email już istnieje."
+                    : "Błąd podczas rejestracji. Sprawdź dane i spróbuj ponownie.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Błąd połączenia z API.";
+        }
+
+        isLoading = false;
+    }
+}

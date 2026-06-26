@@ -34,6 +34,10 @@
                 <span>Zaloguj się</span>
             }
         </button>
+
+        <div class="register-link">
+            Nie masz konta? <a href="/register">Zarejestruj się</a>
+        </div>
     </div>
 </div>
 
@@ -60,17 +64,17 @@
         margin-bottom: 36px;
     }
 
-    .login-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #3aafa9;
-        margin-bottom: 6px;
-    }
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3aafa9;
+            margin-bottom: 6px;
+        }
 
-    .login-header p {
-        color: #6b7188;
-        font-size: 14px;
-    }
+        .login-header p {
+            color: #6b7188;
+            font-size: 14px;
+        }
 
     .alert-error {
         background: #2d1515;
@@ -86,28 +90,29 @@
         margin-bottom: 18px;
     }
 
-    .form-group label {
-        display: block;
-        font-size: 13px;
-        color: #9298ad;
-        margin-bottom: 6px;
-    }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #9298ad;
+            margin-bottom: 6px;
+        }
 
-    .form-group input {
-        width: 100%;
-        padding: 10px 14px;
-        background: #0f1117;
-        border: 1px solid #2a2d3d;
-        border-radius: 8px;
-        color: #e4e6ec;
-        font-size: 14px;
-        outline: none;
-        transition: border-color 0.15s;
-    }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0f1117;
+            border: 1px solid #2a2d3d;
+            border-radius: 8px;
+            color: #e4e6ec;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
+        }
 
-    .form-group input:focus {
-        border-color: #3aafa9;
-    }
+            .form-group input:focus {
+                border-color: #3aafa9;
+            }
 
     .btn-login {
         width: 100%;
@@ -123,8 +128,30 @@
         transition: background 0.15s;
     }
 
-    .btn-login:hover { background: #2d8f8a; }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-login:hover {
+            background: #2d8f8a;
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .register-link {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #6b7188;
+    }
+
+        .register-link a {
+            color: #3aafa9;
+            text-decoration: none;
+        }
+
+            .register-link a:hover {
+                text-decoration: underline;
+            }
 </style>
 
 @code {
