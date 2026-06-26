@@ -1,0 +1,269 @@
+﻿@page "/dashboard"
+@inherits AuthenticatedComponentBase
+@inject HttpClient Http
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">CodeSign</div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item active">▦ Dashboard</a>
+            <a href="/signatures" class="nav-item">✎ Szablony</a>
+            @if (AuthService.IsAdmin)
+            {
+                <a href="/users" class="nav-item">👥 Użytkownicy</a>
+            }
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-name">@AuthService.CurrentUser?.FullName</div>
+            <div class="user-role">@AuthService.CurrentUser?.Role</div>
+            <button class="btn-logout" @onclick="Logout">Wyloguj</button>
+        </div>
+    </aside>
+
+    <main class="dash-main">
+        <div class="dash-header">
+            <h1>Dashboard</h1>
+            <p>Witaj, <strong>@AuthService.CurrentUser?.FullName</strong>!</p>
+        </div>
+
+        @if (profile == null)
+        {
+            <div class="loading">Ładowanie...</div>
+        }
+        else
+        {
+            <div class="cards-grid">
+                <div class="info-card">
+                    <div class="card-label">Email</div>
+                    <div class="card-value">@profile.Email</div>
+                </div>
+                <div class="info-card">
+                    <div class="card-label">Stanowisko</div>
+                    <div class="card-value">@profile.JobTitle</div>
+                </div>
+                <div class="info-card">
+                    <div class="card-label">Rola</div>
+                    <div class="card-value" style="color:#3aafa9">@profile.Role</div>
+                </div>
+            </div>
+
+            <div class="signature-preview-card">
+                <div class="preview-title">Twój podpis email</div>
+                @if (profile.AssignedSignature == null)
+                {
+                    <div class="no-signature">
+                        Nie masz jeszcze przypisanego podpisu.
+                        @if (AuthService.IsAdmin)
+                        {
+                            <a href="/signatures"> Utwórz szablon →</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="signature-name">@profile.AssignedSignature.Name</div>
+                    <div class="signature-html">
+                        @((MarkupString)profile.AssignedSignature.HtmlContent)
+                    </div>
+                }
+            </div>
+        }
+    </main>
+</div>
+
+<style>
+    .dash-layout {
+        display: flex;
+        min-height: 100vh;
+        background: #0f1117;
+        color: #e4e6ec;
+        font-family: -apple-system,sans-serif;
+    }
+
+    .sidebar {
+        width: 240px;
+        background: #1a1d27;
+        border-right: 1px solid #2a2e3d;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 0;
+        flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #3aafa9;
+        padding: 0 24px 28px;
+        border-bottom: 1px solid #2a2e3d;
+        margin-bottom: 16px;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+    }
+
+    .nav-item {
+        display: block;
+        padding: 10px 24px;
+        color: #9298ad;
+        text-decoration: none;
+        font-size: 14px;
+        border-left: 2px solid transparent;
+        transition: all .12s;
+    }
+
+        .nav-item:hover, .nav-item.active {
+            color: #e4e6ec;
+            background: rgba(255,255,255,.04);
+            border-left-color: #3aafa9;
+        }
+
+    .sidebar-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #2a2e3d;
+    }
+
+    .user-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #e4e6ec;
+    }
+
+    .user-role {
+        font-size: 11px;
+        color: #6b7188;
+        margin-top: 2px;
+        margin-bottom: 10px;
+    }
+
+    .btn-logout {
+        background: transparent;
+        border: 1px solid #2a2e3d;
+        color: #9298ad;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        width: 100%;
+        transition: all .12s;
+    }
+
+        .btn-logout:hover {
+            border-color: #f06464;
+            color: #f06464;
+        }
+
+    .dash-main {
+        flex: 1;
+        padding: 40px 48px;
+    }
+
+    .dash-header {
+        margin-bottom: 32px;
+    }
+
+        .dash-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .dash-header p {
+            color: #9298ad;
+            font-size: 15px;
+        }
+
+    .loading {
+        color: #6b7188;
+        font-size: 14px;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .info-card {
+        background: #1a1d27;
+        border: 1px solid #2a2e3d;
+        border-radius: 12px;
+        padding: 20px 24px;
+    }
+
+    .card-label {
+        font-size: 12px;
+        color: #6b7188;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .card-value {
+        font-size: 16px;
+        font-weight: 500;
+        color: #e4e6ec;
+    }
+
+    .signature-preview-card {
+        background: #1a1d27;
+        border: 1px solid #2a2e3d;
+        border-radius: 12px;
+        padding: 24px;
+    }
+
+    .preview-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #9298ad;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .no-signature {
+        color: #6b7188;
+        font-size: 14px;
+    }
+
+        .no-signature a {
+            color: #3aafa9;
+        }
+
+    .signature-name {
+        font-size: 13px;
+        color: #6b7188;
+        margin-bottom: 12px;
+    }
+
+    .signature-html {
+        background: #0f1117;
+        border: 1px solid #2a2e3d;
+        border-radius: 8px;
+        padding: 20px;
+    }
+</style>
+
+@code {
+    private UserProfile? profile;
+
+    protected override async Task OnAuthenticatedAsync()
+    {
+        try
+        {
+            profile = await Http.GetFromJsonAsync<UserProfile>("api/Users/me");
+        }
+        catch
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}

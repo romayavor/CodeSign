@@ -1,0 +1,160 @@
+﻿@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <h1>CodeSign</h1>
+            <p>Corporate Email Signature Manager</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="alert-error">@_error</div>
+        }
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" @bind="_email" placeholder="roman@codesign.com" />
+        </div>
+
+        <div class="form-group">
+            <label>Hasło</label>
+            <input type="password" @bind="_password" placeholder="••••••••" />
+        </div>
+
+        <button class="btn-login" @onclick="HandleLogin" disabled="@_isLoading">
+            @if (_isLoading)
+            {
+                <span>Logowanie...</span>
+            }
+            else
+            {
+                <span>Zaloguj się</span>
+            }
+        </button>
+    </div>
+</div>
+
+<style>
+    .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f1117;
+    }
+
+    .login-card {
+        background: #1a1d2e;
+        border: 1px solid #2a2d3d;
+        border-radius: 16px;
+        padding: 48px 40px;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 36px;
+    }
+
+    .login-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #3aafa9;
+        margin-bottom: 6px;
+    }
+
+    .login-header p {
+        color: #6b7188;
+        font-size: 14px;
+    }
+
+    .alert-error {
+        background: #2d1515;
+        border: 1px solid #a32d2d;
+        color: #f08080;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        color: #9298ad;
+        margin-bottom: 6px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px 14px;
+        background: #0f1117;
+        border: 1px solid #2a2d3d;
+        border-radius: 8px;
+        color: #e4e6ec;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+    .form-group input:focus {
+        border-color: #3aafa9;
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: #3aafa9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.15s;
+    }
+
+    .btn-login:hover { background: #2d8f8a; }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
+
+@code {
+    private string _email = "";
+    private string _password = "";
+    private string _error = "";
+    private bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+            Nav.NavigateTo("/dashboard");
+    }
+
+    private async Task HandleLogin()
+    {
+        _error = "";
+        _isLoading = true;
+
+        var success = await AuthService.LoginAsync(new LoginRequest
+        {
+            Email = _email,
+            Password = _password
+        });
+
+        _isLoading = false;
+
+        if (success)
+            Nav.NavigateTo("/dashboard");
+        else
+            _error = "Nieprawidłowy email lub hasło.";
+    }
+}

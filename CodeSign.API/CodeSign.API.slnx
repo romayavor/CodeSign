@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../CodeSign.Client/CodeSign.Client.csproj" />
+  <Project Path="../CodeSign.Shared/CodeSign.Shared.csproj" />
+  <Project Path="CodeSign.API.csproj" />
+</Solution>

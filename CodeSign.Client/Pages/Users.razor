@@ -1,0 +1,515 @@
+﻿@page "/users"
+@inherits AuthenticatedComponentBase
+@inject HttpClient Http
+
+<div class="dash-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">CodeSign</div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">▦ Dashboard</a>
+            <a href="/signatures" class="nav-item">✎ Szablony</a>
+            <a href="/users" class="nav-item active">👥 Użytkownicy</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-name">@AuthService.CurrentUser?.FullName</div>
+            <div class="user-role">@AuthService.CurrentUser?.Role</div>
+            <button class="btn-logout" @onclick="Logout">Wyloguj</button>
+        </div>
+    </aside>
+
+    <main class="dash-main">
+        <div class="dash-header">
+            <h1>Użytkownicy</h1>
+            <p>Zarządzaj użytkownikami i przypisuj podpisy email.</p>
+        </div>
+
+        @if (errorMessage != string.Empty)
+        {
+            <div class="alert-error">@errorMessage</div>
+        }
+
+        @if (successMessage != string.Empty)
+        {
+            <div class="alert-success">@successMessage</div>
+        }
+
+        @if (users == null)
+        {
+            <div class="loading">Ładowanie użytkowników...</div>
+        }
+        else
+        {
+            <div class="users-table">
+                <div class="table-header">
+                    <div class="col-user">Użytkownik</div>
+                    <div class="col-role">Rola</div>
+                    <div class="col-signature">Podpis</div>
+                    <div class="col-actions">Akcje</div>
+                </div>
+
+                @foreach (var user in users)
+                {
+                    <div class="table-row">
+                        <div class="col-user">
+                            <div class="user-name-main">@user.FullName</div>
+                            <div class="user-email">@user.Email</div>
+                            <div class="user-job">@user.JobTitle</div>
+                        </div>
+
+                        <div class="col-role">
+                            <span class="role-badge @(user.Role == "Admin" ? "role-admin" : "role-user")">
+                                @user.Role
+                            </span>
+                        </div>
+
+                        <div class="col-signature">
+                            @if (user.AssignedSignature == null)
+                            {
+                                <span class="no-sig">— brak —</span>
+                            }
+                            else
+                            {
+                                <span class="sig-name" style="border-left-color:@user.AssignedSignature.AccentColor">
+                                    @user.AssignedSignature.Name
+                                </span>
+                            }
+                        </div>
+
+                        <div class="col-actions">
+                            @if (assigningUserId == user.Id)
+                            {
+                                <div class="assign-panel">
+                                    <select @bind="selectedTemplateId">
+                                        <option value="0">— wybierz szablon —</option>
+                                        @if (templates != null)
+                                        {
+                                            @foreach (var t in templates)
+                                            {
+                                                <option value="@t.Id">@t.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                    <button class="btn-confirm" @onclick="() => ConfirmAssign(user.Id)"
+                                            disabled="@(selectedTemplateId == 0)">
+                                        Przypisz
+                                    </button>
+                                    <button class="btn-cancel-sm" @onclick="CancelAssign">✕</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <button class="btn-assign" @onclick="() => StartAssign(user.Id)">
+                                    @(user.AssignedSignature == null ? "Przypisz" : "Zmień")
+                                </button>
+                                @if (user.AssignedSignature != null)
+                                {
+                                    <button class="btn-remove" @onclick="() => RemoveSignature(user.Id)">
+                                        Usuń
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+</div>
+
+<style>
+    .dash-layout {
+        display: flex;
+        min-height: 100vh;
+        background: #0f1117;
+        color: #e4e6ec;
+        font-family: -apple-system,sans-serif;
+    }
+
+    .sidebar {
+        width: 240px;
+        background: #1a1d27;
+        border-right: 1px solid #2a2e3d;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 0;
+        flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #3aafa9;
+        padding: 0 24px 28px;
+        border-bottom: 1px solid #2a2e3d;
+        margin-bottom: 16px;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+    }
+
+    .nav-item {
+        display: block;
+        padding: 10px 24px;
+        color: #9298ad;
+        text-decoration: none;
+        font-size: 14px;
+        border-left: 2px solid transparent;
+        transition: all .12s;
+    }
+
+        .nav-item:hover, .nav-item.active {
+            color: #e4e6ec;
+            background: rgba(255,255,255,.04);
+            border-left-color: #3aafa9;
+        }
+
+    .sidebar-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #2a2e3d;
+    }
+
+    .user-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #e4e6ec;
+    }
+
+    .user-role {
+        font-size: 11px;
+        color: #6b7188;
+        margin-top: 2px;
+        margin-bottom: 10px;
+    }
+
+    .btn-logout {
+        background: transparent;
+        border: 1px solid #2a2e3d;
+        color: #9298ad;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        width: 100%;
+        transition: all .12s;
+    }
+
+        .btn-logout:hover {
+            border-color: #f06464;
+            color: #f06464;
+        }
+
+    .dash-main {
+        flex: 1;
+        padding: 40px 48px;
+    }
+
+    .dash-header {
+        margin-bottom: 32px;
+    }
+
+        .dash-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .dash-header p {
+            color: #9298ad;
+            font-size: 14px;
+        }
+
+    .alert-error {
+        background: rgba(240,100,100,.1);
+        border: 1px solid rgba(240,100,100,.3);
+        color: #f06464;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background: rgba(58,175,169,.1);
+        border: 1px solid rgba(58,175,169,.3);
+        color: #3aafa9;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .loading {
+        color: #6b7188;
+        font-size: 14px;
+    }
+
+    .users-table {
+        background: #1a1d27;
+        border: 1px solid #2a2e3d;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr 2fr;
+        padding: 12px 20px;
+        background: #141720;
+        border-bottom: 1px solid #2a2e3d;
+        font-size: 11px;
+        color: #6b7188;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .table-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr 2fr;
+        padding: 16px 20px;
+        border-bottom: 1px solid #2a2e3d;
+        align-items: center;
+        transition: background .12s;
+    }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-row:hover {
+            background: rgba(255,255,255,.02);
+        }
+
+    .user-name-main {
+        font-size: 14px;
+        font-weight: 500;
+        color: #e4e6ec;
+    }
+
+    .user-email {
+        font-size: 12px;
+        color: #6b7188;
+        margin-top: 2px;
+    }
+
+    .user-job {
+        font-size: 12px;
+        color: #9298ad;
+        margin-top: 1px;
+    }
+
+    .role-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .role-admin {
+        background: rgba(58,175,169,.15);
+        color: #3aafa9;
+        border: 1px solid rgba(58,175,169,.3);
+    }
+
+    .role-user {
+        background: rgba(146,152,173,.1);
+        color: #9298ad;
+        border: 1px solid #2a2e3d;
+    }
+
+    .no-sig {
+        color: #6b7188;
+        font-size: 13px;
+    }
+
+    .sig-name {
+        font-size: 13px;
+        color: #e4e6ec;
+        padding-left: 10px;
+        border-left: 3px solid #3aafa9;
+    }
+
+    .col-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-assign {
+        background: transparent;
+        border: 1px solid #3aafa9;
+        color: #3aafa9;
+        padding: 5px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all .12s;
+    }
+
+        .btn-assign:hover {
+            background: rgba(58,175,169,.1);
+        }
+
+    .btn-remove {
+        background: transparent;
+        border: 1px solid #2a2e3d;
+        color: #9298ad;
+        padding: 5px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all .12s;
+    }
+
+        .btn-remove:hover {
+            border-color: #f06464;
+            color: #f06464;
+        }
+
+    .assign-panel {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+        .assign-panel select {
+            background: #0f1117;
+            border: 1px solid #2a2e3d;
+            color: #e4e6ec;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+    .btn-confirm {
+        background: #3aafa9;
+        color: #0f1117;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .btn-confirm:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .btn-cancel-sm {
+        background: transparent;
+        border: 1px solid #2a2e3d;
+        color: #9298ad;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    private List<UserProfile>? users;
+    private List<SignatureTemplate>? templates;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string? assigningUserId = null;
+    private int selectedTemplateId = 0;
+
+    protected override async Task OnAuthenticatedAsync()
+    {
+        // Тільки Admin має доступ
+        if (!AuthService.IsAdmin)
+        {
+            Navigation.NavigateTo("/dashboard");
+            return;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            users = await Http.GetFromJsonAsync<List<UserProfile>>("api/Users");
+            templates = await Http.GetFromJsonAsync<List<SignatureTemplate>>("api/Signatures");
+        }
+        catch
+        {
+            errorMessage = "Błąd podczas ładowania danych.";
+        }
+    }
+
+    private void StartAssign(string userId)
+    {
+        assigningUserId = userId;
+        selectedTemplateId = 0;
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelAssign()
+    {
+        assigningUserId = null;
+        selectedTemplateId = 0;
+    }
+
+    private async Task ConfirmAssign(string userId)
+    {
+        if (selectedTemplateId == 0) return;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(
+                $"api/Users/{userId}/assign-signature",
+                selectedTemplateId);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Podpis został przypisany.";
+                assigningUserId = null;
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Błąd podczas przypisywania podpisu.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Błąd połączenia z API.";
+        }
+    }
+
+    private async Task RemoveSignature(string userId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Users/{userId}/signature");
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Podpis został usunięty.";
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = "Błąd podczas usuwania podpisu.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Błąd połączenia z API.";
+        }
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}
