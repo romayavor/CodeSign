@@ -1,76 +1,26 @@
 @CodeSign.API_HostAddress = https://localhost:7278
-@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZTU2MWY5ZC00MWZiLTQ4OTQtYjQ5Yy1kZGY5NTc3OTQ0NDgiLCJlbWFpbCI6InJvbWFuQGNvZGVzaWduLmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJSb21hbiBZYXZvcmVua28iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc4MjQyMzI1MSwiaXNzIjoiQ29kZVNpZ24uQVBJIiwiYXVkIjoiQ29kZVNpZ24uQ2xpZW50In0.MB5idjibgK4Acv8_tpgF_mNuvNfq0xt7fQxNSgHdae0
+@authToken = YOUR_JWT_TOKEN_HERE
+
+### Register
 POST {{CodeSign.API_HostAddress}}/api/Auth/register
 Content-Type: application/json
 
 {
-  "email": "roman@codesign.com",
-  "password": "Test123!",
-  "fullName": "Roman Yavorenko",
-  "jobTitle": "Junior ASP.NET Developer"
+  "email": "admin@example.com",
+  "password": "YourPassword1",
+  "fullName": "Your Name",
+  "jobTitle": "Your Job Title"
 }
 
 ###
 
+### Login
 POST {{CodeSign.API_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
-  "email": "roman@codesign.com",
-  "password": "Test123!"
+  "email": "admin@example.com",
+  "password": "YourPassword1"
 }
 
-###
-### Отримати всі шаблони (потрібен токен)
-GET {{CodeSign.API_HostAddress}}/api/Signatures
-Authorization: Bearer {{authToken}}
-
-###
-
-### Створити шаблон (тільки Admin)
-POST {{CodeSign.API_HostAddress}}/api/Signatures
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
-
-{
-  "name": "Corporate Blue",
-  "htmlContent": "<table><tr><td>Roman Yavorenko</td></tr></table>",
-  "accentColor": "#185FA5"
-}
-### Мій профіль (будь-який залогінений)
-GET {{CodeSign.API_HostAddress}}/api/Users/me
-Authorization: Bearer {{authToken}}
-
-###
-
-### Всі користувачі (тільки Admin)
-GET {{CodeSign.API_HostAddress}}/api/Users
-Authorization: Bearer {{authToken}}
-
-###
-
-### Призначити підпис користувачу (тільки Admin)
-### Спочатку створи шаблон і візьми його id
-POST {{CodeSign.API_HostAddress}}/api/Users/0e561f9d-41fb-4894-b49c-ddf957794448/assign-signature
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
-
-{
-  "templateId": 1
-}
-
-### Assign signature test
-POST {{CodeSign.API_HostAddress}}/api/Users/assignSignature
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
-
-{
-  "userId": "0e561f9d-41fb-4894-b49c-ddf957794448",
-  "templateId": 1
-}
-
-### Get my profile
-GET {{CodeSign.API_HostAddress}}/api/Users/me
-Authorization: Bearer {{authToken}}
-###
 ###
