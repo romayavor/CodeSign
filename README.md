@@ -25,6 +25,7 @@ This mirrors the core functionality of products like **CodeTwo Email Signatures*
 | 🔐 JWT Authentication | Register, login, 24h token expiry, role-based claims |
 | 👥 Role-Based Access | Admin manages everything; User sees own profile and signature |
 | ✍️ Signature Templates | Full CRUD with live HTML preview and accent color picker |
+| ✏️ Dual-mode Editor | Create signatures via form fields with live preview OR raw HTML editor |
 | 📋 User Management | Admin assigns/removes templates per user |
 | 📥 HTML Export | Download email signature as ready-to-use `.html` file |
 | 💾 Session Persistence | Token in `localStorage`, survives page refresh |
@@ -176,6 +177,9 @@ Instead of repeating authorization checks in every Blazor page, a base component
 
 **Why localStorage over in-memory state?**
 Blazor WASM loses in-memory state on page refresh. Storing the JWT token in `localStorage` via `IJSRuntime` ensures the session survives navigation and refresh without requiring re-login.
+
+**Why dual-mode signature editor?**
+Users can create signatures either through a structured form (name, title, email, phone, company, website) with automatic HTML generation and live preview, or switch to raw HTML mode for full control. This mirrors real-world email signature tools like CodeTwo which offer both simple and advanced editing modes.
 
 ---
 
