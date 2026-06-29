@@ -44,28 +44,93 @@
                     <input @bind="formName" placeholder="np. Corporate Blue" />
                 </div>
 
-                <div class="form-field">
-                    <label>Kolor akcentu</label>
-                    <div class="color-row">
-                        <input type="color" @bind="formAccentColor" />
-                        <span class="color-val">@formAccentColor</span>
-                        <div class="color-preview" style="background:@formAccentColor"></div>
-                    </div>
+                <div class="mode-switcher">
+                    <button class="@(useFields ? "mode-btn active" : "mode-btn")"
+                            @onclick="() => SwitchMode(true)">
+                        ✎ Pola formularza
+                    </button>
+                    <button class="@(!useFields ? "mode-btn active" : "mode-btn")"
+                            @onclick="() => SwitchMode(false)">
+                        &lt;/&gt; Kod HTML
+                    </button>
                 </div>
 
-                <div class="form-field">
-                    <label>Zawartość HTML</label>
-                    <textarea @bind="formHtml" rows="6"
-                              placeholder="&lt;table&gt;&lt;tr&gt;&lt;td&gt;Imię Nazwisko&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;">
-                    </textarea>
-                </div>
+                @if (useFields)
+                {
+                    <div class="fields-grid">
+                        <div class="form-field">
+                            <label>Imię i nazwisko</label>
+                            <input value="@fieldName"
+                                   @oninput="e => { fieldName = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="Jan Kowalski" />
+                        </div>
+                        <div class="form-field">
+                            <label>Stanowisko</label>
+                            <input value="@fieldTitle"
+                                   @oninput="e => { fieldTitle = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="ASP.NET Developer" />
+                        </div>
+                        <div class="form-field">
+                            <label>Email</label>
+                            <input value="@fieldEmail"
+                                   @oninput="e => { fieldEmail = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="jan@codesign.com" />
+                        </div>
+                        <div class="form-field">
+                            <label>Telefon</label>
+                            <input value="@fieldPhone"
+                                   @oninput="e => { fieldPhone = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="+48 000 000 000" />
+                        </div>
+                        <div class="form-field">
+                            <label>Firma</label>
+                            <input value="@fieldCompany"
+                                   @oninput="e => { fieldCompany = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="Nazwa firmy" />
+                        </div>
+                        <div class="form-field">
+                            <label>Strona www (opcjonalnie)</label>
+                            <input value="@fieldWebsite"
+                                   @oninput="e => { fieldWebsite = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }"
+                                   placeholder="www.firma.com" />
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Kolor akcentu</label>
+                        <div class="color-row">
+                            <input type="color" value="@formAccentColor"
+                                   @oninput="e => { formAccentColor = e.Value?.ToString() ?? string.Empty; GenerateHtml(); }" />
+                            <span class="color-val">@formAccentColor</span>
+                            <div class="color-preview" style="background:@formAccentColor"></div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-field">
+                        <label>Kolor akcentu</label>
+                        <div class="color-row">
+                            <input type="color" @bind="formAccentColor" />
+                            <span class="color-val">@formAccentColor</span>
+                            <div class="color-preview" style="background:@formAccentColor"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>Zawartość HTML</label>
+                        <textarea @bind="formHtml" rows="8"
+                                  placeholder="&lt;table&gt;&lt;tr&gt;&lt;td&gt;Imię Nazwisko&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;">
+                        </textarea>
+                    </div>
+                }
 
                 <div class="form-field">
                     <label>Podgląd</label>
                     <div class="preview-box">
                         @if (string.IsNullOrWhiteSpace(formHtml))
                         {
-                            <span class="preview-empty">Wpisz HTML żeby zobaczyć podgląd...</span>
+                            <span class="preview-empty">Wypełnij pola żeby zobaczyć podgląd...</span>
                         }
                         else
                         {
@@ -105,11 +170,9 @@
                             <div class="template-name">@t.Name</div>
                             <div class="template-date">@t.CreatedAt.ToString("dd.MM.yyyy")</div>
                         </div>
-
                         <div class="template-preview">
                             @((MarkupString)t.HtmlContent)
                         </div>
-
                         @if (AuthService.IsAdmin)
                         {
                             <div class="template-actions">
@@ -125,360 +188,71 @@
 </div>
 
 <style>
-    .dash-layout {
-        display: flex;
-        min-height: 100vh;
-        background: #0f1117;
-        color: #e4e6ec;
-        font-family: -apple-system,sans-serif;
-    }
+    .dash-layout { display:flex; min-height:100vh; background:#0f1117; color:#e4e6ec; font-family:-apple-system,sans-serif; }
+    .sidebar { width:240px; background:#1a1d27; border-right:1px solid #2a2e3d; display:flex; flex-direction:column; padding:24px 0; flex-shrink:0; }
+    .sidebar-logo { font-size:22px; font-weight:700; color:#3aafa9; padding:0 24px 28px; border-bottom:1px solid #2a2e3d; margin-bottom:16px; }
+    .sidebar-nav { flex:1; }
+    .nav-item { display:block; padding:10px 24px; color:#9298ad; text-decoration:none; font-size:14px; border-left:2px solid transparent; transition:all .12s; }
+    .nav-item:hover, .nav-item.active { color:#e4e6ec; background:rgba(255,255,255,.04); border-left-color:#3aafa9; }
+    .sidebar-footer { padding:16px 24px; border-top:1px solid #2a2e3d; }
+    .user-name { font-size:13px; font-weight:500; color:#e4e6ec; }
+    .user-role { font-size:11px; color:#6b7188; margin-top:2px; margin-bottom:10px; }
+    .btn-logout { background:transparent; border:1px solid #2a2e3d; color:#9298ad; padding:6px 14px; border-radius:6px; font-size:12px; cursor:pointer; width:100%; transition:all .12s; }
+    .btn-logout:hover { border-color:#f06464; color:#f06464; }
+    .dash-main { flex:1; padding:40px 48px; }
+    .dash-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; }
+    .dash-header h1 { font-size:28px; font-weight:700; }
+    .btn-new { background:#3aafa9; color:#0f1117; border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .btn-new:hover { background:#2d9690; }
+    .alert-error { background:rgba(240,100,100,.1); border:1px solid rgba(240,100,100,.3); color:#f06464; padding:10px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; }
 
-    .sidebar {
-        width: 240px;
-        background: #1a1d27;
-        border-right: 1px solid #2a2e3d;
-        display: flex;
-        flex-direction: column;
-        padding: 24px 0;
-        flex-shrink: 0;
-    }
+    .form-card { background:#1a1d27; border:1px solid #2a2e3d; border-radius:12px; padding:28px; margin-bottom:32px; }
+    .form-title { font-size:16px; font-weight:600; margin-bottom:20px; color:#e4e6ec; }
 
-    .sidebar-logo {
-        font-size: 22px;
-        font-weight: 700;
-        color: #3aafa9;
-        padding: 0 24px 28px;
-        border-bottom: 1px solid #2a2e3d;
-        margin-bottom: 16px;
-    }
+    .mode-switcher { display:flex; gap:8px; margin-bottom:20px; background:#0f1117; border:1px solid #2a2e3d; border-radius:8px; padding:4px; }
+    .mode-btn { flex:1; padding:8px 16px; background:transparent; border:none; border-radius:6px; color:#9298ad; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; }
+    .mode-btn.active { background:#1a1d27; color:#3aafa9; border:1px solid #2a2e3d; }
+    .mode-btn:hover:not(.active) { color:#e4e6ec; }
 
-    .sidebar-nav {
-        flex: 1;
-    }
+    .fields-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
 
-    .nav-item {
-        display: block;
-        padding: 10px 24px;
-        color: #9298ad;
-        text-decoration: none;
-        font-size: 14px;
-        border-left: 2px solid transparent;
-        transition: all .12s;
-    }
+    .form-field { margin-bottom:16px; }
+    .form-field label { display:block; font-size:12px; color:#6b7188; margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em; }
+    .form-field input, .form-field textarea { width:100%; padding:10px 14px; background:#0f1117; border:1px solid #2a2e3d; border-radius:8px; color:#e4e6ec; font-size:14px; outline:none; transition:border-color .15s; box-sizing:border-box; }
+    .form-field input:focus, .form-field textarea:focus { border-color:#3aafa9; }
+    .form-field textarea { resize:vertical; font-family:monospace; font-size:12px; }
 
-        .nav-item:hover, .nav-item.active {
-            color: #e4e6ec;
-            background: rgba(255,255,255,.04);
-            border-left-color: #3aafa9;
-        }
+    .color-row { display:flex; align-items:center; gap:12px; }
+    .color-val { font-family:monospace; font-size:13px; color:#9298ad; }
+    .color-preview { width:28px; height:28px; border-radius:6px; border:1px solid #2a2e3d; }
 
-    .sidebar-footer {
-        padding: 16px 24px;
-        border-top: 1px solid #2a2e3d;
-    }
+    .preview-box { background:#0f1117; border:1px solid #2a2e3d; border-radius:8px; padding:20px; min-height:80px; }
+    .preview-empty { color:#6b7188; font-size:13px; }
 
-    .user-name {
-        font-size: 13px;
-        font-weight: 500;
-        color: #e4e6ec;
-    }
+    .form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+    .btn-cancel { background:transparent; border:1px solid #2a2e3d; color:#9298ad; padding:8px 18px; border-radius:8px; font-size:14px; cursor:pointer; }
+    .btn-cancel:hover { border-color:#e4e6ec; color:#e4e6ec; }
+    .btn-save { background:#3aafa9; color:#0f1117; border:none; border-radius:8px; padding:8px 20px; font-size:14px; font-weight:600; cursor:pointer; }
+    .btn-save:hover:not(:disabled) { background:#2d9690; }
+    .btn-save:disabled { opacity:.6; cursor:not-allowed; }
 
-    .user-role {
-        font-size: 11px;
-        color: #6b7188;
-        margin-top: 2px;
-        margin-bottom: 10px;
-    }
+    .loading { color:#6b7188; font-size:14px; }
+    .empty-state { text-align:center; padding:80px 20px; }
+    .empty-icon { font-size:48px; margin-bottom:16px; opacity:.3; }
+    .empty-title { font-size:18px; font-weight:600; color:#9298ad; margin-bottom:8px; }
+    .empty-sub { font-size:14px; color:#6b7188; }
 
-    .btn-logout {
-        background: transparent;
-        border: 1px solid #2a2e3d;
-        color: #9298ad;
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        width: 100%;
-        transition: all .12s;
-    }
-
-        .btn-logout:hover {
-            border-color: #f06464;
-            color: #f06464;
-        }
-
-    .dash-main {
-        flex: 1;
-        padding: 40px 48px;
-    }
-
-    .dash-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 32px;
-    }
-
-        .dash-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-    .btn-new {
-        background: #3aafa9;
-        color: #0f1117;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background .15s;
-    }
-
-        .btn-new:hover {
-            background: #2d9690;
-        }
-
-    .alert-error {
-        background: rgba(240,100,100,.1);
-        border: 1px solid rgba(240,100,100,.3);
-        color: #f06464;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-size: 13px;
-        margin-bottom: 20px;
-    }
-
-    .form-card {
-        background: #1a1d27;
-        border: 1px solid #2a2e3d;
-        border-radius: 12px;
-        padding: 28px;
-        margin-bottom: 32px;
-    }
-
-    .form-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 20px;
-        color: #e4e6ec;
-    }
-
-    .form-field {
-        margin-bottom: 16px;
-    }
-
-        .form-field label {
-            display: block;
-            font-size: 12px;
-            color: #6b7188;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-        }
-
-        .form-field input, .form-field textarea {
-            width: 100%;
-            padding: 10px 14px;
-            background: #0f1117;
-            border: 1px solid #2a2e3d;
-            border-radius: 8px;
-            color: #e4e6ec;
-            font-size: 14px;
-            outline: none;
-            transition: border-color .15s;
-            box-sizing: border-box;
-        }
-
-            .form-field input:focus, .form-field textarea:focus {
-                border-color: #3aafa9;
-            }
-
-        .form-field textarea {
-            resize: vertical;
-            font-family: var(--mono, monospace);
-            font-size: 12px;
-        }
-
-    .color-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .color-val {
-        font-family: monospace;
-        font-size: 13px;
-        color: #9298ad;
-    }
-
-    .color-preview {
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
-        border: 1px solid #2a2e3d;
-    }
-
-    .preview-box {
-        background: #0f1117;
-        border: 1px solid #2a2e3d;
-        border-radius: 8px;
-        padding: 20px;
-        min-height: 80px;
-    }
-
-    .preview-empty {
-        color: #6b7188;
-        font-size: 13px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .btn-cancel {
-        background: transparent;
-        border: 1px solid #2a2e3d;
-        color: #9298ad;
-        padding: 8px 18px;
-        border-radius: 8px;
-        font-size: 14px;
-        cursor: pointer;
-    }
-
-        .btn-cancel:hover {
-            border-color: #e4e6ec;
-            color: #e4e6ec;
-        }
-
-    .btn-save {
-        background: #3aafa9;
-        color: #0f1117;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-        .btn-save:hover:not(:disabled) {
-            background: #2d9690;
-        }
-
-        .btn-save:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-    .loading {
-        color: #6b7188;
-        font-size: 14px;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 80px 20px;
-    }
-
-    .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: .3;
-    }
-
-    .empty-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #9298ad;
-        margin-bottom: 8px;
-    }
-
-    .empty-sub {
-        font-size: 14px;
-        color: #6b7188;
-    }
-
-    .templates-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px,1fr));
-        gap: 20px;
-    }
-
-    .template-card {
-        background: #1a1d27;
-        border: 1px solid #2a2e3d;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-    .template-card-header {
-        padding: 16px 20px;
-        border-left: 3px solid #3aafa9;
-        border-bottom: 1px solid #2a2e3d;
-    }
-
-    .template-name {
-        font-size: 15px;
-        font-weight: 600;
-        color: #e4e6ec;
-    }
-
-    .template-date {
-        font-size: 11px;
-        color: #6b7188;
-        margin-top: 4px;
-    }
-
-    .template-preview {
-        padding: 20px;
-        background: #0f1117;
-        min-height: 80px;
-    }
-
-    .template-actions {
-        padding: 12px 20px;
-        border-top: 1px solid #2a2e3d;
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-    }
-
-    .btn-edit {
-        background: transparent;
-        border: 1px solid #2a2e3d;
-        color: #9298ad;
-        padding: 5px 14px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all .12s;
-    }
-
-        .btn-edit:hover {
-            border-color: #3aafa9;
-            color: #3aafa9;
-        }
-
-    .btn-delete {
-        background: transparent;
-        border: 1px solid #2a2e3d;
-        color: #9298ad;
-        padding: 5px 14px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all .12s;
-    }
-
-        .btn-delete:hover {
-            border-color: #f06464;
-            color: #f06464;
-        }
+    .templates-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:20px; }
+    .template-card { background:#1a1d27; border:1px solid #2a2e3d; border-radius:12px; overflow:hidden; }
+    .template-card-header { padding:16px 20px; border-left:3px solid #3aafa9; border-bottom:1px solid #2a2e3d; }
+    .template-name { font-size:15px; font-weight:600; color:#e4e6ec; }
+    .template-date { font-size:11px; color:#6b7188; margin-top:4px; }
+    .template-preview { padding:20px; background:#0f1117; min-height:80px; }
+    .template-actions { padding:12px 20px; border-top:1px solid #2a2e3d; display:flex; gap:8px; justify-content:flex-end; }
+    .btn-edit { background:transparent; border:1px solid #2a2e3d; color:#9298ad; padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; transition:all .12s; }
+    .btn-edit:hover { border-color:#3aafa9; color:#3aafa9; }
+    .btn-delete { background:transparent; border:1px solid #2a2e3d; color:#9298ad; padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; transition:all .12s; }
+    .btn-delete:hover { border-color:#f06464; color:#f06464; }
 </style>
 
 @code {
@@ -486,12 +260,17 @@
     private bool showForm = false;
     private bool isSaving = false;
     private string errorMessage = string.Empty;
-
-    // Поля форми
+    private bool useFields = true;
     private string formName = string.Empty;
     private string formHtml = string.Empty;
     private string formAccentColor = "#185FA5";
     private int? editingId = null;
+    private string fieldName = string.Empty;
+    private string fieldTitle = string.Empty;
+    private string fieldEmail = string.Empty;
+    private string fieldPhone = string.Empty;
+    private string fieldCompany = string.Empty;
+    private string fieldWebsite = string.Empty;
 
     protected override async Task OnAuthenticatedAsync()
     {
@@ -510,12 +289,49 @@
         }
     }
 
+    private void SwitchMode(bool fields)
+    {
+        useFields = fields;
+        if (fields)
+        {
+            GenerateHtml();
+        }
+    }
+
+    private void GenerateHtml()
+    {
+        if (!useFields) return;
+
+        var color = formAccentColor;
+
+        var websiteRow = !string.IsNullOrWhiteSpace(fieldWebsite)
+            ? $"<tr><td style=\"font-size:12px;color:{color};padding-top:3px\">🌐 {fieldWebsite}</td></tr>"
+            : string.Empty;
+
+        formHtml = $@"<table cellpadding=""0"" cellspacing=""0"" style=""font-family:-apple-system,Arial,sans-serif"">
+  <tr><td style=""font-size:16px;font-weight:600;color:#1a1a2e"">{fieldName}</td></tr>
+  <tr><td style=""font-size:13px;color:#666666;padding-top:2px"">{fieldTitle}</td></tr>
+  <tr><td style=""padding:10px 0 8px""><div style=""width:40px;height:2px;background:{color}""></div></td></tr>
+  <tr><td style=""font-size:12px;color:#555555"">📧 {fieldEmail}</td></tr>
+  <tr><td style=""font-size:12px;color:#555555;padding-top:3px"">📞 {fieldPhone}</td></tr>
+  {websiteRow}
+  <tr><td style=""font-size:11px;font-weight:600;color:{color};padding-top:10px;border-top:1px solid #eeeeee"">{fieldCompany}</td></tr>
+</table>";
+    }
+
     private void OpenCreateForm()
     {
         editingId = null;
         formName = string.Empty;
         formHtml = string.Empty;
         formAccentColor = "#185FA5";
+        fieldName = string.Empty;
+        fieldTitle = string.Empty;
+        fieldEmail = string.Empty;
+        fieldPhone = string.Empty;
+        fieldCompany = string.Empty;
+        fieldWebsite = string.Empty;
+        useFields = true;
         showForm = true;
         errorMessage = string.Empty;
     }
@@ -526,6 +342,7 @@
         formName = t.Name;
         formHtml = t.HtmlContent;
         formAccentColor = t.AccentColor;
+        useFields = false;
         showForm = true;
         errorMessage = string.Empty;
     }
@@ -544,6 +361,8 @@
             return;
         }
 
+        if (useFields) GenerateHtml();
+
         isSaving = true;
         errorMessage = string.Empty;
 
@@ -559,15 +378,9 @@
             HttpResponseMessage response;
 
             if (editingId == null)
-            {
-                // Створення — POST
                 response = await Http.PostAsJsonAsync("api/Signatures", payload);
-            }
             else
-            {
-                // Редагування — PUT
                 response = await Http.PutAsJsonAsync($"api/Signatures/{editingId}", payload);
-            }
 
             if (response.IsSuccessStatusCode)
             {
